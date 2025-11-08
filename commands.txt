@@ -1,0 +1,2 @@
+compile: javac main.java Process.java PriorityQueue.java
+run: java main < test_input.txt
