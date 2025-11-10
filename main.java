@@ -12,12 +12,29 @@ public class main {
             "^\\s*PROCESS\\s+(\\d+)\\s+(RT|NM)\\s+(\\d+)\\s+(.*\\S)\\s*$");
 
     public static void main(String[] args) {
+
+        //shared priority queue
         final PriorityQueue queue = new PriorityQueue();
 
         // Start 5 worker threads
         List<Thread> workers = new ArrayList<>(5);
+        
         for (int i = 1; i <= 5; i++) {
-            Thread t = new Thread(new Worker(queue), "Worker-" + i);
+            // I use to have this as a seperate class but switched it to a lambda instead.
+            Runnable worker = () -> {
+            try {
+                while (true) {
+                    Process p = queue.take();  // capture the outer variable
+                if (p == null) {
+                    return;
+                }
+                p.run();
+                }
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+            }
+            };
+            Thread t = new Thread(worker, "Worker-" + i);
             t.start();
             workers.add(t);
         }
@@ -107,32 +124,6 @@ public class main {
         catch (NumberFormatException nfe) {
             System.err.println("Invalid " + field + ": " + s);
             return -1;
-        }
-    }
-
-    // Worker repeatedly take highest-priority job and run it.
-    // When queue.beginShutdown() is called, take() returns null and program exit.
-    private static class Worker implements Runnable {
-        private final PriorityQueue queue;
-
-        Worker(PriorityQueue queue) {
-            this.queue = queue;
-        }
-
-        @Override
-        public void run() {
-            try {
-                while (true) {
-                    Process p = queue.take();     // blocks until available or shutdown
-                    if (p == null) {              // shutdown observed: do not start new work
-                        return;
-                    }
-                    p.run();
-                }
-            } catch (InterruptedException ie) {
-                // Exit on interrupt; no new work should start
-                Thread.currentThread().interrupt();
-            }
         }
     }
 }

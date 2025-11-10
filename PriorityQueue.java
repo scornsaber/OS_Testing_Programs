@@ -55,7 +55,7 @@ public class PriorityQueue {
 
         // Pull highest-priority available: RT(0..9), then NM(0..9)
         Process p = pollUnsafe();
-        // Should never be null here (non-empty), but guard anyway
+        // Should never be null here (non-empty) but just in case
         return p;
     }
 
